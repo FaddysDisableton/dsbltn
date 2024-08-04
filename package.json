@@ -1,0 +1,33 @@
+{
+  "name": "dsbltn",
+  "version": "0.13.0",
+  "description": "Disableton Shell; Command-Line Music Production Tool",
+  "bin": "./README.md",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dsbltnsrc/shell.git"
+  },
+  "keywords": [
+    "music",
+    "music-production",
+    "music-technology",
+    "sound",
+    "audio",
+    "csound",
+    "scenarist",
+    "command-line",
+    "cli",
+    "linux",
+    "unix",
+    "macos",
+    "shell",
+    "repl",
+    "recursive"
+  ],
+  "author": "Faddy Michel <f@faddys.io> (https://x.com/faddymichel)",
+  "license": "Unlicense",
+  "bugs": {
+    "url": "https://github.com/dsbltnsrc/shell/issues"
+  },
+  "homepage": "https://github.com/dsbltnsrc/shell#readme"
+}
