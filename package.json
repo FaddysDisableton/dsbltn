@@ -5,7 +5,7 @@
   "bin": "./README.md",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dsbltnsrc/shell.git"
+    "url": "git+https://github.com/FaddysDisableton/dsbltn.git"
   },
   "keywords": [
     "music",
@@ -22,12 +22,17 @@
     "macos",
     "shell",
     "repl",
-    "recursive"
+    "recursive",
+    "faddys"
   ],
   "author": "Faddy Michel <f@faddys.io> (https://x.com/faddymichel)",
   "license": "Unlicense",
   "bugs": {
-    "url": "https://github.com/dsbltnsrc/shell/issues"
+    "url": "https://github.com/FaddysDisableton/dsbltn/issues"
   },
-  "homepage": "https://github.com/dsbltnsrc/shell#readme"
+  "homepage": "https://github.com/FaddysDisableton/dsbltn#readme",
+  "dependencies": {
+    "@faddys/command": "^5.3.0",
+    "@faddys/scenarist": "^4.1.2"
+  }
 }
