@@ -26,38 +26,16 @@ sudo npm i -g disableton
 disableton [ ... notation ]
 ```
 
-## `.dsbltn`
+## `.dsbltn/engine`
 
 ```roll
-?# if [ ! -d .dsbltn ] ; then mkdir .dsbltn ; fi
+?# mkdir -p .dsbltn/engine
 ```
 
-## `.dsbltn/examples/`
+### `.dsbltn/engine/index.orc`
 
 ```roll
-?# cd .dsbltn ; if [ ! -d examples ] ; then mkdir examples ; fi
-```
-
-### `.dsbltn/examples/maqsum.no`
-
-```roll
-?# cd .dsbltn/examples ; cat - > maqsum.no
-```
-
-```
-+==
-
-~ 105 4
-
-0/8 dom/01 1/8 tak/04 3/8 tak/07 4/8 dom/12 6/8 tak/06
-
--==
-```
-
-### `.dsbltn/index.orc`
-
-```roll
-?# cd .dsbltn ; if [ ! -f index.orc ] ; then cat - > index.orc ; fi
+?# cd .dsbltn/engine ; if [ ! -f index.orc ] ; then cat - > index.orc ; fi
 ```
 
 ```csound
@@ -118,22 +96,22 @@ endin
 //-==
 ```
 
-### `.dsbltn/node_modules/@faddys/scenarist`
+### `.dsbltn/engine/node_modules/@faddys/scenarist`
 
 ```roll
-?# cd .dsbltn ; if [ ! -d node_modules/@faddys/scenarist ] ; then npm i @faddys/scenarist ; fi
+?# cd .dsbltn/engine ; if [ ! -d node_modules/@faddys/scenarist ] ; then npm i @faddys/scenarist ; fi
 ```
 
-### `.dsbltn/node_modules/@faddys/command`
+### `.dsbltn/engine/node_modules/@faddys/command`
 
 ```roll
-?# cd .dsbltn ; if [ ! -d node_modules/@faddys/command ] ; then npm i @faddys/command ; fi
+?# cd .dsbltn/engine ; if [ ! -d node_modules/@faddys/command ] ; then npm i @faddys/command ; fi
 ```
 
-### `.dsbltn/index.mjs`
+### `.dsbltn/engine/shell.mjs`
 
 ```roll
-?# cat - > .dsbltn/index.mjs
+?# cat - > .dsbltn/engine/shell.mjs
 ```
 
 ```js
@@ -142,23 +120,47 @@ endin
 import Scenarist from '@faddys/scenarist';
 import $0 from '@faddys/command';
 import { createInterface } from 'node:readline';
-import { stdin as input, stdout as output } from 'node:process';
+import { stdin as input, stdout as output } from 'node:process';import Disableton from './index.mjs';
+
+const directory = await $0 ( '_dsbdir' )
+.then ( $ => $ ( Symbol .for ( 'output' ) ) )
+.then ( ( [ directory ] ) => directory );
+
+const $ = await Scenarist ( new Disableton ( ... process .argv .slice ( 2 ) ) );
+
+createInterface ( { input, output } )
+.on ( 'line', function process ( line ) {
+
+$ (  ... line .trim () .split ( /\s+/ ) )
+.then ( output => ( [ 'string', 'number', 'boolean' ] .includes ( typeof output ) ? console .log ( output ) : undefined ) )
+.catch ( error => console .error ( error ?.message || error ) )
+.finally ( () => this .prompt () )
+
+} ) .prompt ();
+
+//-==
+```
+
+### `.dsbltn/engine/index.mjs`
+
+```roll
+?# cat - > .dsbltn/engine/index.mjs
+```
+
+```js
+//+==
+
 import Note from './note.mjs';
 import File from './file.mjs';
 
-await Scenarist ( new class Disableton {
+export default class Disableton {
 
 #argv
 
 constructor ( ... argv ) { this .#argv = argv }
 
-static directory = $0 ( '_dsbdir' )
-.then ( $ => $ ( Symbol .for ( 'output' ) ) )
-.then ( ( [ directory ] ) => directory );
-
 #player
 #location
-#interface
 
 async $_producer ( $, { player, location } ) {
 
@@ -177,21 +179,6 @@ await this .#player ( Symbol .for ( 'write' ), 'dsbltn/' + location [ location .
 return;
 
 }
-
-console .log ( "Hello! This is Faddy's Disableton; Music Production Tool!" );
-
-const argv = process .argv .slice ( 2 );
-
-if ( argv .length )
-await $ ( ... argv );
-
-this .#interface = createInterface ( { input, output } )
-.on ( 'line', line => $ (  ... line .trim () .split ( /\s+/ ) )
-.then ( output => ( [ 'string', 'number', 'boolean' ] .includes ( typeof output ) ? console .log ( output ) : undefined ) )
-.catch ( error => console .error ( error ?.message || error ) )
-.finally ( () => this .#interface .prompt () ) );
-
-this .#interface .prompt ();
 
 }
 
@@ -266,19 +253,21 @@ $note = Note
 
 $_director = new File
 
-} );
+};
 
 //-==
 ```
 
-### `.dsbltn/note.mjs`
+### `.dsbltn/engine/note.mjs`
 
 ```roll
-?# cat - > .dsbltn/note.mjs
+?# cat - > .dsbltn/engine/note.mjs
 ```
 
 ```js
 //+==
+
+import File from './file.mjs';
 
 export default class Note {
 
@@ -288,6 +277,16 @@ static instance = 0
 constructor ( ... argv ) {
 
 this .#instance = ++Note .instance % 10 === 0 ? ++Note .instance : Note .instance;
+
+}
+
+#player
+
+async $_producer ( $, { player } ) {
+
+this .#player = player;
+
+await $ ( Symbol .for ( 'list' ) );
 
 }
 
@@ -303,15 +302,38 @@ return `i ${ this .#record ? 14 : 13 }.${ this .#instance } `;
 
 }
 
+#step = 0
+
+async $step ( $, ... argv ) {
+
+if ( ! argv .length )
+return this .#step;
+
+const step = parseFloat ( argv .shift () );
+
+if ( isNaN ( step ) )
+throw 'The provided note step value is not a number';
+
+await $ ( Symbol .for ( 'write' ), 'step', this .#step =step );
+
+if ( ! argv .length )
+return this .#step;
+
+return $ ( ... argv );
+
+}
+
+$_director = new File ( 'note' )
+
 };
 
 //-==
 ```
 
-### `.dsbltn/file.mjs`
+### `.dsbltn/engine/file.mjs`
 
 ```roll
-?# cat - > .dsbltn/file.mjs
+?# cat - > .dsbltn/engine/file.mjs
 ```
 
 ```js
@@ -328,14 +350,21 @@ writeFile as write
 
 export default class File {
 
+constructor ( type = 'dsbltn' ) { this .type = type }
+
 async $_producer ( $, { player, location } ) {
 
 this .player = player;
 
-this .$directory = [ ... location .slice ( 0, -1 ), '.dsbltn/.data/' ] .join ( '/' );
+const recursive = true;
 
-await make ( this .$directory + 'dsbltn', { recursive: true } );
-await make ( this .$directory + 'note', { recursive: true } );
+await make ( this .$directory = [ ... location .slice ( 0, -1 ), '.dsbltn/data/' ] .join ( '/' ), { recursive } );
+
+if ( this .type !== 'dsbltn' )
+return;
+
+await make ( this .$directory + 'dsbltn', { recursive } );
+await make ( this .$directory + 'note', { recursive } );
 
 }
 
@@ -365,5 +394,5 @@ return write ( this .$directory + direction, typeof value === 'string' ? value :
 ```
 
 ```roll
-?# $ =0 node .dsbltn/index.mjs
+?# $ =0 node .dsbltn/engine/shell.mjs
 ```
