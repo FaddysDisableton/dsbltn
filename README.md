@@ -1,6 +1,6 @@
 #!/usr/bin/env roll
 
-# Disableton Shell
+# dsbltn Shell
 
 ## Command-Line Music Production Tool
 
@@ -17,13 +17,13 @@ In Solidarity with The People of Palestine till Their Whole Land is FREE
 ## Installation
 
 ```sh
-sudo npm i -g disableton
+sudo npm i -g dsbltn
 ```
 
 ## Usage
 
 ```sh
-disableton [ ... notation ]
+dsbltn [ ... notation ]
 ```
 
 ## `.dsbltn/engine`
@@ -99,13 +99,13 @@ endin
 ### `.dsbltn/engine/node_modules/@faddys/scenarist`
 
 ```roll
-?# cd .dsbltn/engine ; if [ ! -d node_modules/@faddys/scenarist ] ; then npm i @faddys/scenarist ; fi
+?# -1 -2 cd .dsbltn/engine ; if [ ! -d node_modules/@faddys/scenarist ] ; then npm i @faddys/scenarist ; fi
 ```
 
 ### `.dsbltn/engine/node_modules/@faddys/command`
 
 ```roll
-?# cd .dsbltn/engine ; if [ ! -d node_modules/@faddys/command ] ; then npm i @faddys/command ; fi
+?# -1 -2 cd .dsbltn/engine ; if [ ! -d node_modules/@faddys/command ] ; then npm i @faddys/command ; fi
 ```
 
 ### `.dsbltn/engine/shell.mjs`
@@ -120,13 +120,13 @@ endin
 import Scenarist from '@faddys/scenarist';
 import $0 from '@faddys/command';
 import { createInterface } from 'node:readline';
-import { stdin as input, stdout as output } from 'node:process';import Disableton from './index.mjs';
+import { stdin as input, stdout as output } from 'node:process';import dsbltn from './index.mjs';
 
 const directory = await $0 ( '_dsbdir' )
 .then ( $ => $ ( Symbol .for ( 'output' ) ) )
 .then ( ( [ directory ] ) => directory );
 
-const $ = await Scenarist ( new Disableton ( ... process .argv .slice ( 2 ) ) );
+const $ = await Scenarist ( new dsbltn ( ... process .argv .slice ( 2 ) ) );
 
 createInterface ( { input, output } )
 .on ( 'line', function process ( line ) {
@@ -150,14 +150,18 @@ $ (  ... line .trim () .split ( /\s+/ ) )
 ```js
 //+==
 
-import Note from './note.mjs';
 import File from './file.mjs';
 
-export default class Disableton {
+export default class dsbltn {
 
-#argv
+static instance = 0
+#instance
 
-constructor ( ... argv ) { this .#argv = argv }
+constructor () {
+
+this .#instance = ++dsbltn .instance % 10 === 0 ? ++dsbltn .instance : dsbltn .instance;
+
+}
 
 #player
 #location
@@ -168,9 +172,6 @@ this .#player = player;
 this .#location = location;
 
 await $ ( Symbol .for ( 'list' ) );
-
-if ( this .#argv .length )
-await $ ( ... this .#argv );
 
 if ( this .#player ) {
 
@@ -229,7 +230,7 @@ static tempo = 105
 async $tempo ( $, ... argv ) {
 
 if ( ! argv .length )
-return this .#tempo || ( this .#player ? await this .#player ( 'tempo' ) : Disableton .tempo );
+return this .#tempo || ( this .#player ? await this .#player ( 'tempo' ) : dsbltn .tempo );
 
 this .#tempo = parseFloat ( argv .shift () );
 
@@ -247,48 +248,9 @@ return ! argv .length ? this .#tempo : $ ( ... argv );
 
 }
 
-$dsbltn = Disableton
-
-$note = Note
+[ '$+' ] = dsbltn
 
 $_director = new File
-
-};
-
-//-==
-```
-
-### `.dsbltn/engine/note.mjs`
-
-```roll
-?# cat - > .dsbltn/engine/note.mjs
-```
-
-```js
-//+==
-
-import File from './file.mjs';
-
-export default class Note {
-
-static instance = 0
-#instance
-
-constructor ( ... argv ) {
-
-this .#instance = ++Note .instance % 10 === 0 ? ++Note .instance : Note .instance;
-
-}
-
-#player
-
-async $_producer ( $, { player } ) {
-
-this .#player = player;
-
-await $ ( Symbol .for ( 'list' ) );
-
-}
 
 #record = false
 
@@ -323,8 +285,6 @@ return $ ( ... argv );
 
 }
 
-$_director = new File ( 'note' )
-
 };
 
 //-==
@@ -350,21 +310,12 @@ writeFile as write
 
 export default class File {
 
-constructor ( type = 'dsbltn' ) { this .type = type }
-
 async $_producer ( $, { player, location } ) {
 
 this .player = player;
+this .$directory = [ ... location .slice ( 0, -1 ), '.dsbltn/data/' ] .join ( '/' );
 
-const recursive = true;
-
-await make ( this .$directory = [ ... location .slice ( 0, -1 ), '.dsbltn/data/' ] .join ( '/' ), { recursive } );
-
-if ( this .type !== 'dsbltn' )
-return;
-
-await make ( this .$directory + 'dsbltn', { recursive } );
-await make ( this .$directory + 'note', { recursive } );
+await make ( this .$directory + 'dsbltn', { recursive: true } );
 
 }
 
