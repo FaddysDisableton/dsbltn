@@ -157,11 +157,7 @@ export default class dsbltn {
 static instance = 0
 #instance
 
-constructor () {
-
-this .#instance = ++dsbltn .instance % 10 === 0 ? ++dsbltn .instance : dsbltn .instance;
-
-}
+constructor () { this .#instance = ++dsbltn .instance % 10 === 0 ? ++dsbltn .instance : dsbltn .instance }
 
 #player
 #location
@@ -173,56 +169,15 @@ this .#location = location;
 
 await $ ( Symbol .for ( 'list' ) );
 
-if ( this .#player ) {
+if ( ! this .#player ) return;
 
 await this .#player ( Symbol .for ( 'write' ), 'dsbltn/' + location [ location .length - 1 ] );
 
-return;
-
 }
 
-}
+$dsbltn = dsbltn
 
-async $score ( $, ... argv ) {
-
-if ( ! argv .length )
-return;
-
-const notation = await $0 ( 'cat', argv .shift () )
-.then ( async $ => ( {
-
-output: await $ ( Symbol .for ( 'output' ) ),
-error: await $ ( Symbol .for ( 'error' ) )
-
-} ) );
-
-if ( notation .error .length )
-throw notation .error .join ( '\n' );
-
-for ( let line of notation .output )
-if ( ( line = line .trim () ) .length )
-await $ ( ... line .split ( /\s+/ ) );
-
-}
-
-async $write () {
-
-const score = await $0 ( 'cat - > .dsbltn/index.sco' );
-
-for ( const note of this )
-await score ( typeof note === 'object' ? this .note ( note ) : note );
-
-await score ( Symbol .for ( 'end' ) );
-
-}
-
-#engine
-
-async $play () {
-
-this .#engine = await $0 ( 'csound -odac .dsbltn/index.orc .dsbltn/sco' );
-
-}
+$_director = new File
 
 static tempo = 105
 #tempo
@@ -230,27 +185,18 @@ static tempo = 105
 async $tempo ( $, ... argv ) {
 
 if ( ! argv .length )
-return this .#tempo || ( this .#player ? await this .#player ( 'tempo' ) : dsbltn .tempo );
+return this .#tempo || ( this .#tempo = this .#player ? await this .#player ( 'tempo' ) : dsbltn .tempo );
 
-this .#tempo = parseFloat ( argv .shift () );
+const tempo = parseFloat ( argv .shift () );
 
-if ( isNaN ( this .#tempo ) ) {
+if ( isNaN ( tempo ) )
+throw 'The provided tempo value is not a number';
 
-await $ ( Symbol .for ( 'write' ), 'tempo', this .#tempo = await this .#player ( 'tempo' ) );
-
-throw `Tempo is set to a non-numeric value. Instead, it's reset to it's player tempo ${ this .#tempo }`;
-
-}
-
-$ ( Symbol .for ( 'write' ), 'tempo', this .#tempo );
+$ ( Symbol .for ( 'write' ), 'tempo', this .#tempo = tempo );
 
 return ! argv .length ? this .#tempo : $ ( ... argv );
 
 }
-
-[ '$+' ] = dsbltn
-
-$_director = new File
 
 #record = false
 
@@ -322,7 +268,7 @@ await make ( this .$directory + 'dsbltn', { recursive: true } );
 async $_list ( $ ) {
 
 for ( const direction of await list ( this .$directory, { recursive: true } ) )
-if ( ! [ 'dsbltn', 'note' ] .includes ( direction ) )
+if ( ! ( this .$directory + direction ) .endsWith ( '/dsbltn' ) )
 $ ( Symbol .for ( 'read' ), direction );
 
 }
