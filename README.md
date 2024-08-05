@@ -167,18 +167,18 @@ async $_producer ( $, { player, location } ) {
 this .#player = player;
 this .#location = location;
 
-await $ ( Symbol .for ( 'list' ) );
+await $ ( Symbol .for ( 'file' ), 'list' );
 
 if ( ! this .#player ) return;
 
-await this .#player ( Symbol .for ( 'write' ), 'dsbltn/' + location [ location .length - 1 ] );
+await this .#player ( Symbol .for ( 'file' ), 'write', 'dsbltn/' + location [ location .length - 1 ] );
 
 }
 
 get $dsbltn () { return dsbltn }
 
 #file = new File
-get $_director () { return this .#file }
+get $_file () { return this .#file }
 
 static tempo = 105
 #tempo
@@ -193,7 +193,7 @@ const tempo = parseFloat ( argv .shift () );
 if ( isNaN ( tempo ) )
 throw 'The provided tempo value is not a number';
 
-$ ( Symbol .for ( 'write' ), 'tempo', this .#tempo = tempo );
+$ ( Symbol .for ( 'file' ), 'write', 'tempo', this .#tempo = tempo );
 
 return ! argv .length ? this .#tempo : $ ( ... argv );
 
@@ -223,7 +223,7 @@ const step = parseFloat ( argv .shift () );
 if ( isNaN ( step ) )
 throw 'The provided note step value is not a number';
 
-await $ ( Symbol .for ( 'write' ), 'step', this .#step =step );
+await $ ( Symbol .for ( 'file' ), 'write', 'step', this .#step =step );
 
 if ( ! argv .length )
 return this .#step;
@@ -266,21 +266,21 @@ await make ( this .$directory + 'dsbltn', { recursive: true } );
 
 }
 
-async $_list ( $ ) {
+async $list ( $ ) {
 
 for ( const direction of await list ( this .$directory, { recursive: true } ) )
 if ( ! ( this .$directory + direction ) .endsWith ( '/dsbltn' ) )
-$ ( Symbol .for ( 'read' ), direction );
+$ ( 'read', direction );
 
 }
 
-async $_read ( $, direction ) {
+async $read ( $, direction ) {
 
 await this .player ( ... direction .split ( '/' ), await read ( this .$directory + direction, 'utf8' ) );
 
 }
 
-$_write ( $, direction, value = '' ) {
+$write ( $, direction, value = '' ) {
 
 return write ( this .$directory + direction, typeof value === 'string' ? value : value .toString (), 'utf8' );
 
