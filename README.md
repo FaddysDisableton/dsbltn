@@ -175,9 +175,10 @@ await this .#player ( Symbol .for ( 'write' ), 'dsbltn/' + location [ location .
 
 }
 
-$dsbltn = dsbltn
+get $dsbltn () { return dsbltn }
 
-$_director = new File
+#file = new File
+get $_director () { return this .#file }
 
 static tempo = 105
 #tempo
