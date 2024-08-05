@@ -5,7 +5,7 @@
   "bin": "./README.md",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/FaddysDisableton/dsbltn.git"
+    "url": "git+https://github.com/FaddysDsbltn/dsbltn.git"
   },
   "keywords": [
     "music",
@@ -28,9 +28,9 @@
   "author": "Faddy Michel <f@faddys.io> (https://x.com/faddymichel)",
   "license": "Unlicense",
   "bugs": {
-    "url": "https://github.com/FaddysDisableton/dsbltn/issues"
+    "url": "https://github.com/FaddysDsbltn/dsbltn/issues"
   },
-  "homepage": "https://github.com/FaddysDisableton/dsbltn#readme",
+  "homepage": "https://github.com/FaddysDsbltn/dsbltn#readme",
   "dependencies": {
     "@faddys/command": "^5.3.0",
     "@faddys/scenarist": "^4.1.2"
