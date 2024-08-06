@@ -156,8 +156,14 @@ export default class dsbltn {
 
 static instance = 0
 #instance
+#argv
 
-constructor () { this .#instance = ++dsbltn .instance % 10 === 0 ? ++dsbltn .instance : dsbltn .instance }
+constructor ( ... argv ) {
+
+this .#instance = ++dsbltn .instance % 10 === 0 ? ++dsbltn .instance : dsbltn .instance;
+this .#argv = argv;
+
+}
 
 #player
 #location
@@ -168,6 +174,9 @@ this .#player = player;
 this .#location = location;
 
 await $ ( Symbol .for ( 'file' ), 'list' );
+
+if ( this .#argv .length )
+await $ ( ... this .#argv );
 
 if ( ! this .#player ) return;
 
@@ -187,51 +196,81 @@ $playback ( $, ... argv ) { return this .#record = false, $ ( ... argv ) }
 
 async $_parameter ( $, ... argv ) {
 
-const parameter = argv .shift ();
+const name = argv .shift ();
 
 if ( ! argv .length )
-return this [ '#' + parameter ] || ( this [ '#' + parameter ] = this .#player ? await this .#player ( parameter ) : dsbltn [ parameter ] );
+return this .#parameter [ name ];
 
-const value = parseFloat ( argv .shift () );
+
+let value = parseFloat ( argv .shift () );
 
 if ( isNaN ( value ) )
-throw 'The provided value is not a number';
+throw `The provided ${ name } value is not a number`;
 
-$ ( Symbol .for ( 'file' ), 'write', parameter, this [ '#' + parameter ] = value );
+$ ( Symbol .for ( 'file' ), 'write', name, this .#parameter [ name ] = value );
 
-return ! argv .length ? this [ '#' + parameter ] : $ ( ... argv );
+return ! argv .length ? this .#parameter [ name ] : $ ( ... argv );
 
 }
 
-static tempo = 105
-#tempo
-$tempo ( $, ... argv ) { return $ ( Symbol .for ( 'parameter' ), 'tempo', ... argv ) }
+#parameter = {
 
-static measure = 4
-#measure
-$measure ( $, ... argv ) { return $ ( Symbol .for ( 'parameter' ), 'measure', ... argv ) }
+time: 0,
+tempo: 105,
+measure: 4,
+divisions: 8,
+step: 0,
+left: 1,
+right: 1
 
-static step = 0
-#step
-$step ( $, ...argv ) { return $ ( Symbol .for ( 'parameter' ), 'step', ... argv ) }
+}
 
-static divisions = 8
-#divisions
-$divisions ( $, ... argv ) { return $ ( Symbol .for ( 'parameter' ), 'divisions', ... argv ) }
-
-static time = 0
-#time
 $time ( $, ... argv ) { return $ ( Symbol .for ( 'parameter' ), 'time', ... argv ) }
+$tempo ( $, ... argv ) { return $ ( Symbol .for ( 'parameter' ), 'tempo', ... argv ) }
+$measure ( $, ... argv ) { return $ ( Symbol .for ( 'parameter' ), 'measure', ... argv ) }
+$divisions ( $, ... argv ) { return $ ( Symbol .for ( 'parameter' ), 'divisions', ... argv ) }
+$step ( $, ...argv ) { return $ ( Symbol .for ( 'parameter' ), 'step', ... argv ) }
+$left ( $, ... argv ) { return $ ( Symbol .for ( 'parameter' ), 'left', ... argv ) }
+$right ( $, ... argv ) { return $ ( Symbol .for ( 'parameter' ), 'right', ... argv ) }
+
+#sound
+$sound ( $, ... argv ) {
+
+if ( ! argv .length )
+
+if ( this .#sound ?.length )
+return this .#sound;
+
+else
+throw 'Sound is not set yet';
+
+$ ( Symbol .for ( 'file' ), 'write', 'sound', this .#sound = argv .shift () );
+
+return ! argv .length ? this .#sound : $ ( ... argv );
+
+}
 
 async $score ( $ ) {
 
+if ( this .#sound )
 return [
 
 'i',
 this .#record ? 14 : 13 + '.' + this .#instance, 
-await $ ( 'measure' ) * ( await $ ( 'time' ) + await $ ( 'step' ) / await $ ( 'divisions' ) )
+await $ ( 'measure' ) * ( await $ ( 'time' ) + await $ ( 'step' ) / await $ ( 'divisions' ) ),
+1,
+`"${ this .#sound }"`,
+await $ ( 'left' ), await $ ( 'right' )
 
 ] .join ( ' ' );
+
+return ( await Promise .all (
+
+Object .keys ( this )
+.map ( direction => direction .slice ( 1 ) )
+.map ( direction => $ ( direction, 'score' ) )
+
+) ) .join ( '\n' );
 
 }
 
@@ -273,7 +312,7 @@ async $list ( $ ) {
 
 for ( const direction of await list ( this .$directory, { recursive: true } ) )
 if ( ! ( this .$directory + direction ) .endsWith ( '/dsbltn' ) )
-$ ( 'read', direction );
+await $ ( 'read', direction );
 
 }
 
