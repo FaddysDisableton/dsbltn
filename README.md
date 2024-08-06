@@ -180,55 +180,58 @@ get $dsbltn () { return dsbltn }
 #file = new File
 get $_file () { return this .#file }
 
-static tempo = 105
-#tempo
-
-async $tempo ( $, ... argv ) {
-
-if ( ! argv .length )
-return this .#tempo || ( this .#tempo = this .#player ? await this .#player ( 'tempo' ) : dsbltn .tempo );
-
-const tempo = parseFloat ( argv .shift () );
-
-if ( isNaN ( tempo ) )
-throw 'The provided tempo value is not a number';
-
-$ ( Symbol .for ( 'file' ), 'write', 'tempo', this .#tempo = tempo );
-
-return ! argv .length ? this .#tempo : $ ( ... argv );
-
-}
-
 #record = false
 
 $record ( $, ... argv ) { return this .#record = true, $ ( ... argv ) }
 $playback ( $, ... argv ) { return this .#record = false, $ ( ... argv ) }
 
-async $score ( $ ) {
+async $_parameter ( $, ... argv ) {
 
-return `i ${ this .#record ? 14 : 13 }.${ this .#instance } `;
-// ${ await $ ( 'time' ) } 1 "${ this .#path }" ${ this .#left } ${ this .#right }`;
+const parameter = argv .shift ();
+
+if ( ! argv .length )
+return this [ '#' + parameter ] || ( this [ '#' + parameter ] = this .#player ? await this .#player ( parameter ) : dsbltn [ parameter ] );
+
+const value = parseFloat ( argv .shift () );
+
+if ( isNaN ( value ) )
+throw 'The provided value is not a number';
+
+$ ( Symbol .for ( 'file' ), 'write', parameter, this [ '#' + parameter ] = value );
+
+return ! argv .length ? this [ '#' + parameter ] : $ ( ... argv );
 
 }
 
-#step = 0
+static tempo = 105
+#tempo
+$tempo ( $, ... argv ) { return $ ( Symbol .for ( 'parameter' ), 'tempo', ... argv ) }
 
-async $step ( $, ... argv ) {
+static measure = 4
+#measure
+$measure ( $, ... argv ) { return $ ( Symbol .for ( 'parameter' ), 'measure', ... argv ) }
 
-if ( ! argv .length )
-return this .#step;
+static step = 0
+#step
+$step ( $, ...argv ) { return $ ( Symbol .for ( 'parameter' ), 'step', ... argv ) }
 
-const step = parseFloat ( argv .shift () );
+static divisions = 8
+#divisions
+$divisions ( $, ... argv ) { return $ ( Symbol .for ( 'parameter' ), 'divisions', ... argv ) }
 
-if ( isNaN ( step ) )
-throw 'The provided note step value is not a number';
+static time = 0
+#time
+$time ( $, ... argv ) { return $ ( Symbol .for ( 'parameter' ), 'time', ... argv ) }
 
-await $ ( Symbol .for ( 'file' ), 'write', 'step', this .#step =step );
+async $score ( $ ) {
 
-if ( ! argv .length )
-return this .#step;
+return [
 
-return $ ( ... argv );
+'i',
+this .#record ? 14 : 13 + '.' + this .#instance, 
+await $ ( 'measure' ) * ( await $ ( 'time' ) + await $ ( 'step' ) / await $ ( 'divisions' ) )
+
+] .join ( ' ' );
 
 }
 
