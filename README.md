@@ -134,14 +134,13 @@ $: await Scenarist ( new dsbltn ( Symbol .for ( 'location' ), location, ... proc
 interface: createInterface ( { input, output } )
 .on ( 'line', line => {
 
-shell .$ (  ... line .trim () .split ( /\s+/ ) )
+dsbltn .$ (  ... line .trim () .split ( /\s+/ ) )
 .then ( async output => {
 
 if ( [ 'string', 'number', 'boolean' ] .includes ( typeof output ) )
 console .log ( output );
 
-else if ( typeof output === 'function' )
-shell .interface .setPrompt ( await ( shell .$ = output ) ( 'location' ) + ': ' );
+shell .interface .setPrompt ( await dsbltn .$ ( 'location' ) + ': ' );
 
 } )
 .catch ( error => console .error ( error ?.message || error ) )
@@ -151,7 +150,7 @@ shell .interface .setPrompt ( await ( shell .$ = output ) ( 'location' ) + ': ' 
 
 };
 
-shell .interface .setPrompt ( await shell .$ ( 'location' ) + ': ' );
+shell .interface .setPrompt ( await dsbltn .$ ( 'location' ) + ': ' );
 shell .interface .prompt ();
 
 //-==
@@ -190,10 +189,7 @@ this .#location = location;
 
 await $ ( Symbol .for ( 'file' ), 'list' );
 
-if ( this .#argv .length )
-await $ ( ... this .#argv );
-
-if ( ! this .#player ) return;
+if ( ! this .#player ) return ( dsbltn .$ = $ ) ( ... this .#argv );
 
 await this .#player ( Symbol .for ( 'file' ), 'write', 'dsbltn/' + location [ location .length - 1 ] );
 
@@ -214,7 +210,8 @@ get $dsbltn () { return dsbltn }
 #file = new File
 get $_file () { return this .#file }
 
-[ '$.' ] ( $ ) { return $ }
+[ '$.' ] ( $, ... argv ) { ( dsbltn .$ = $ ) ( ... argv ) }
+[ '$..' ] ( $, ... argv ) { ( dsbltn .$ = this .#player || $ ) ( ... argv ) }
 
 #record = false
 
@@ -277,14 +274,14 @@ return ! argv .length ? this .#sound : $ ( ... argv );
 
 }
 
-async $score ( $ ) {
+async $score ( $, time = 0 ) {
 
 if ( this .#sound )
 return [
 
 'i',
 this .#record ? 14 : 13 + '.' + this .#instance, 
-await $ ( 'measure' ) * ( await $ ( 'time' ) + await $ ( 'step' ) / await $ ( 'divisions' ) ),
+await $ ( 'measure' ) * ( time + await $ ( 'step' ) / await $ ( 'divisions' ) ),
 1,
 `"${ this .#sound }"`,
 await $ ( 'left' ), await $ ( 'right' )
@@ -295,7 +292,7 @@ return ( await Promise .all (
 
 Object .keys ( this )
 .map ( direction => direction .slice ( 1 ) )
-.map ( direction => $ ( direction, 'score' ) )
+.map ( async direction => $ ( direction, 'score', await $ ( 'step' ) / await $ ( 'divisions' ) * await $ ( 'measure' ) ) )
 
 ) ) .join ( '\n' );
 
