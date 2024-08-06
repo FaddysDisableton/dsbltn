@@ -1,6 +1,6 @@
 {
   "name": "dsbltn",
-  "version": "0.13.7",
+  "version": "0.13.8",
   "description": "Disableton Shell; Command-Line Music Production Tool",
   "bin": "./README.md",
   "repository": {
