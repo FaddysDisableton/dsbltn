@@ -121,22 +121,38 @@ import Scenarist from '@faddys/scenarist';
 import $0 from '@faddys/command';
 import { createInterface } from 'node:readline';
 import { stdin as input, stdout as output } from 'node:process';import dsbltn from './index.mjs';
+import { parse } from 'node:path';
 
 const directory = await $0 ( '_dsbdir' )
 .then ( $ => $ ( Symbol .for ( 'output' ) ) )
 .then ( ( [ directory ] ) => directory );
 
-const $ = await Scenarist ( new dsbltn ( ... process .argv .slice ( 2 ) ) );
+let { base: location } = parse ( process .cwd () );
+let shell = {
 
-createInterface ( { input, output } )
-.on ( 'line', function process ( line ) {
+$: await Scenarist ( new dsbltn ( Symbol .for ( 'location' ), location, ... process .argv .slice ( 2 ) ) ),
+interface: createInterface ( { input, output } )
+.on ( 'line', line => {
 
-$ (  ... line .trim () .split ( /\s+/ ) )
-.then ( output => ( [ 'string', 'number', 'boolean' ] .includes ( typeof output ) ? console .log ( output ) : undefined ) )
+shell .$ (  ... line .trim () .split ( /\s+/ ) )
+.then ( async output => {
+
+if ( [ 'string', 'number', 'boolean' ] .includes ( typeof output ) )
+console .log ( output );
+
+else if ( typeof output === 'function' )
+shell .interface .setPrompt ( await ( shell .$ = output ) ( 'location' ) + ': ' );
+
+} )
 .catch ( error => console .error ( error ?.message || error ) )
-.finally ( () => this .prompt () )
+.finally ( () => shell .interface .prompt () )
 
-} ) .prompt ();
+} )
+
+};
+
+shell .interface .setPrompt ( await shell .$ ( 'location' ) + ': ' );
+shell .interface .prompt ();
 
 //-==
 ```
@@ -166,7 +182,6 @@ this .#argv = argv;
 }
 
 #player
-#location
 
 async $_producer ( $, { player, location } ) {
 
@@ -184,10 +199,22 @@ await this .#player ( Symbol .for ( 'file' ), 'write', 'dsbltn/' + location [ lo
 
 }
 
+#location
+get $location () { return [ dsbltn .location, ... this .#location ] .join ( ' ' ) }
+$_location ( $, ... argv ) {
+
+dsbltn .location = argv .shift ();
+
+return $ ( ... argv );
+
+}
+
 get $dsbltn () { return dsbltn }
 
 #file = new File
 get $_file () { return this .#file }
+
+[ '$.' ] ( $ ) { return $ }
 
 #record = false
 
