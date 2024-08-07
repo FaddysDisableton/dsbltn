@@ -191,6 +191,8 @@ await $ ( Symbol .for ( 'file' ), 'list' );
 
 if ( ! this .#player ) return ( dsbltn .$ = $ ) ( ... this .#argv );
 
+await $ ( ... this .#argv );
+
 await this .#player ( Symbol .for ( 'file' ), 'write', 'dsbltn/' + location [ location .length - 1 ] );
 
 }
